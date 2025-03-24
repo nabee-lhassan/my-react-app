@@ -13,21 +13,36 @@ const SignupForm = () => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
+
     });
+    console.log(formData)
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('https://yourproject.mockapi.io/users', formData);
-      console.log('Response:', response.data);
-      alert('User Created Successfully!');
-      setFormData({ name: '', lastname: '', email: '', password: '' }); // Clear form
+
+      const allUsers = await axios.get('https://67dc8ab9e00db03c40685892.mockapi.io//users');
+      const userExists = allUsers.data.some(user => (user.email === formData.email));
+      if (userExists) {
+        alert('Email already existed ')
+      }
+      else {
+
+        const response = await axios.post('https://67dc8ab9e00db03c40685892.mockapi.io//users', formData);
+        console.log('Response:', response.data);
+        alert('User Created Successfully!');
+        setFormData({ name: '', lastname: '', email: '', password: '' }); // Clear form
+
+      }
+
+
     } catch (error) {
       console.error('Error:', error);
       alert('Error Creating User');
     }
   };
+
 
   return (
     <div>
@@ -71,6 +86,8 @@ const SignupForm = () => {
         <br /><br />
         <button type="submit">Submit</button>
       </form>
+
+     
     </div>
   );
 };
