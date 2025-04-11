@@ -1,95 +1,80 @@
-import React, { useState } from 'react';
 import axios from 'axios';
+import { useForm } from "react-hook-form";
+import { useState, useEffect } from 'react';
 
-const SignupForm = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    lastname: '',
-    email: '',
-    password: ''
-  });
+export default function Signup() {
+  const {
+    register,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { errors }
+  } = useForm();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
+  const [loading, setLoading] = useState(false);
 
-    });
-    console.log(formData)
-  };
+  useEffect(() => {
+    console.log("Loading status changed:", loading);
+  }, [loading]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
+    setLoading(true);
     try {
-
-      const allUsers = await axios.get('https://67dc8ab9e00db03c40685892.mockapi.io//users');
-      const userExists = allUsers.data.some(user => (user.email === formData.email));
-      if (userExists) {
-        alert('Email already existed ')
-      }
-      else {
-
-        const response = await axios.post('https://67dc8ab9e00db03c40685892.mockapi.io//users', formData);
-        console.log('Response:', response.data);
-        alert('User Created Successfully!');
-        setFormData({ name: '', lastname: '', email: '', password: '' }); // Clear form
-
-      }
-
-
+      await axios.post('https://67dc8ab9e00db03c40685892.mockapi.io/users', data);
+      console.log('Success', data);
+      reset(); // Clear form
     } catch (error) {
-      console.error('Error:', error);
-      alert('Error Creating User');
+      console.error('Error', error);
+    } finally {
+      setLoading(false);
     }
   };
 
+  const password = watch("password");
 
   return (
     <div>
-      <h2>Signup Form</h2>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <input
-          type="text"
-          name="name"
-          placeholder="Enter First Name"
-          value={formData.name}
-          onChange={handleChange}
-          required
+          placeholder='Email'
+          {...register("email", {
+            required: "Email is required"
+          })}
         />
-        <br /><br />
-        <input
-          type="text"
-          name="lastname"
-          placeholder="Enter Last Name"
-          value={formData.lastname}
-          onChange={handleChange}
-          required
-        />
-        <br /><br />
-        <input
-          type="email"
-          name="email"
-          placeholder="Enter Email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
-        <br /><br />
-        <input
-          type="password"
-          name="password"
-          placeholder="Enter Password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-        />
-        <br /><br />
-        <button type="submit">Submit</button>
-      </form>
+        {errors.email && <p>{errors.email.message}</p>}
 
-     
+        <input
+          type='password'
+          placeholder='Password'
+          {...register("password", {
+            required: "Password is required",
+            minLength: {
+              value: 8,
+              message: "Password must be at least 8 characters"
+            }
+          })}
+        />
+        {errors.password && <p>{errors.password.message}</p>}
+
+        <input
+          type='password'
+          placeholder='Confirm Password'
+          {...register("confirmPassword", {
+            required: "Confirm password is required",
+            validate: value =>
+              value === password || "Passwords do not match",
+            minLength: {
+              value: 8,
+              message: "Confirm password must be at least 8 characters"
+            }
+          })}
+        />
+        {errors.confirmPassword && <p>{errors.confirmPassword.message}</p>}
+
+        <button type="submit" disabled={loading}>
+          {loading ? "Submitting..." : "Submit"}
+        </button>
+      </form>
     </div>
   );
-};
-
-export default SignupForm;
+}
